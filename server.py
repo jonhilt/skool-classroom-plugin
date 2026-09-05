@@ -51,6 +51,10 @@ class ToolError(Exception):
     """User-visible tool failure (no secrets)."""
 
 
+# ---------------------------------------------------------------------------
+# Secrets — values leave this module only as a Cookie header or JWT payload
+# ---------------------------------------------------------------------------
+
 def _env_secret(name: str) -> str | None:
     return skool_auth.env_value(name)
 
@@ -98,6 +102,10 @@ def redact_text(text: str, limit: int = 800) -> str:
         return cleaned[:limit] + "…"
     return cleaned
 
+
+# ---------------------------------------------------------------------------
+# HTTP
+# ---------------------------------------------------------------------------
 
 def _headers(accept: str, slug: str | None = None, json_body: bool = False) -> dict[str, str]:
     referer = f"{WEB_BASE}/{slug}/classroom" if slug else f"{WEB_BASE}/"
@@ -169,6 +177,10 @@ def fetch_html(url: str, slug: str | None = None) -> str:
     _status, _hdrs, raw = http_request(url, headers=headers)
     return raw.decode("utf-8", errors="replace")
 
+
+# ---------------------------------------------------------------------------
+# Shapes
+# ---------------------------------------------------------------------------
 
 def as_dict(value: Any) -> dict[str, Any]:
     if isinstance(value, dict):
@@ -329,6 +341,11 @@ def extract_group_id(obj: Any) -> str | None:
 
     walk(obj)
     return found[0] if found else None
+
+
+# ---------------------------------------------------------------------------
+# TipTap / markdown
+# ---------------------------------------------------------------------------
 
 def parse_desc_nodes(desc: str | None) -> list[Any]:
     if not desc:
@@ -899,8 +916,8 @@ def owner_id_for_unit(unit: dict[str, Any], slug: str | None) -> str:
 # ---------------------------------------------------------------------------
 
 def tool_auth_status(_args: dict[str, Any]) -> dict[str, Any]:
-    """Booleans + source only — never cookie/token values."""
     return skool_auth.auth_status_payload()
+
 
 def tool_courses(args: dict[str, Any]) -> dict[str, Any]:
     require_secrets()
@@ -1117,7 +1134,9 @@ TOOLS: dict[str, dict[str, Any]] = {
     "skool_auth_status": {
         "handler": tool_auth_status,
         "description": (
-            "Report auth source (env/chrome/cookie_file/missing) and whether SKOOL_AUTH_TOKEN, SKOOL_CLIENT_ID, and SKOOL_AWS_WAF_TOKEN are present (booleans only; never prints values). Includes expiry when known."
+            "Report auth source (env | chrome | cookie_file | missing), which of the three "
+            "cookies are present (booleans only), and JWT/cookie expiry if known. Never prints token values. "
+            "Prefers env vars; optional SKOOL_COOKIE_FILE or SKOOL_AUTH_MODE=chrome (Linux v10)."
         ),
         "inputSchema": {"type": "object", "properties": {}, "additionalProperties": False},
     },
