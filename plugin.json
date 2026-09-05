@@ -1,0 +1,18 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "skool",
+  "version": "0.1.1",
+  "description": "Unofficial Skool classroom tools (api2.skool.com + classroom page data). Session cookies are plugin variables — never committed.",
+  "author": {
+    "name": "Jon Hilton"
+  },
+  "repository": "https://github.com/jonhilt/skool-classroom-plugin",
+  "keywords": [
+    "skool",
+    "classroom",
+    "courses",
+    "lessons",
+    "mcp",
+    "unofficial"
+  ]
+}

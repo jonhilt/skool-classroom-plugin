@@ -1,0 +1,23 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+  "mcpServers": {
+    "skool": {
+      "type": "stdio",
+      "command": "python3",
+      "args": ["./server.py"],
+      "cwd": "${PLUGIN_ROOT}",
+      "env": {
+        "PYTHONUNBUFFERED": "1",
+        "SKOOL_AUTH_TOKEN": "${SKOOL_AUTH_TOKEN}",
+        "SKOOL_CLIENT_ID": "${SKOOL_CLIENT_ID}",
+        "SKOOL_AWS_WAF_TOKEN": "${SKOOL_AWS_WAF_TOKEN}",
+        "SKOOL_COMMUNITY_SLUG": "${SKOOL_COMMUNITY_SLUG}",
+        "SKOOL_AUTH_MODE": "${SKOOL_AUTH_MODE}",
+        "SKOOL_USE_CHROME": "${SKOOL_USE_CHROME}",
+        "SKOOL_COOKIE_FILE": "${SKOOL_COOKIE_FILE}",
+        "SKOOL_CHROME_PROFILE": "${SKOOL_CHROME_PROFILE}",
+        "SKOOL_CHROME_COOKIES_DB": "${SKOOL_CHROME_COOKIES_DB}"
+      }
+    }
+  }
+}

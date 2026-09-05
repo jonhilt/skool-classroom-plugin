@@ -1,0 +1,74 @@
+{
+  "name": "skool",
+  "version": "0.1.1",
+  "description": "Unofficial Skool classroom tools (api2.skool.com + classroom page data). Session cookies are plugin variables — never committed.",
+  "author": {
+    "name": "Jon Hilton"
+  },
+  "repository": "https://github.com/jonhilt/skool-classroom-plugin",
+  "keywords": [
+    "skool",
+    "classroom",
+    "courses",
+    "lessons",
+    "mcp",
+    "unofficial"
+  ],
+  "variables": {
+    "type": "object",
+    "properties": {
+      "SKOOL_AUTH_TOKEN": {
+        "type": "string",
+        "title": "Skool auth_token cookie",
+        "description": "Portable paste: value of the auth_token cookie. Leave empty if using SKOOL_AUTH_MODE=chrome or SKOOL_COOKIE_FILE. Never commit this value."
+      },
+      "SKOOL_CLIENT_ID": {
+        "type": "string",
+        "title": "Skool client_id cookie",
+        "description": "Portable paste: value of the client_id cookie. Leave empty if using chrome mode or a cookie file. Never commit this value."
+      },
+      "SKOOL_AWS_WAF_TOKEN": {
+        "type": "string",
+        "title": "Skool aws-waf-token cookie",
+        "description": "Portable paste: value of the aws-waf-token cookie (rotates often). Leave empty if using chrome mode or a cookie file. Never commit this value."
+      },
+      "SKOOL_COMMUNITY_SLUG": {
+        "type": "string",
+        "title": "Default community slug",
+        "description": "Optional default community slug used when a tool call omits community_slug.",
+        "default": ""
+      },
+      "SKOOL_AUTH_MODE": {
+        "type": "string",
+        "title": "Auth mode",
+        "description": "Leave empty for portable env cookies. Set to chrome to read the local Chrome Cookies DB (same OS user; Linux v10 only).",
+        "default": "",
+        "enum": ["", "chrome"]
+      },
+      "SKOOL_USE_CHROME": {
+        "type": "string",
+        "title": "Use Chrome cookies",
+        "description": "Set 1 to enable same-machine Chrome fallback (same as SKOOL_AUTH_MODE=chrome).",
+        "default": ""
+      },
+      "SKOOL_COOKIE_FILE": {
+        "type": "string",
+        "title": "Cookie file path",
+        "description": "Optional Netscape cookies.txt or a file containing a Cookie: header. Used when the three env cookies are not all set. Never commit this file.",
+        "default": ""
+      },
+      "SKOOL_CHROME_PROFILE": {
+        "type": "string",
+        "title": "Chrome profile directory",
+        "description": "Optional Chrome profile folder name (Default or Profile 1). Empty checks both well-known names only.",
+        "default": ""
+      },
+      "SKOOL_CHROME_COOKIES_DB": {
+        "type": "string",
+        "title": "Chrome Cookies DB path",
+        "description": "Optional exact path to a Chrome Cookies SQLite file. Not a filesystem search.",
+        "default": ""
+      }
+    }
+  }
+}
