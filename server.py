@@ -204,3 +204,128 @@ def _pick(unit: dict[str, Any], meta: dict[str, Any], *keys: str) -> Any:
         if key in meta and meta[key] not in (None, ""):
             return meta[key]
     return None
+
+
+def summarize_course(unit: dict[str, Any], children: list[Any] | None = None) -> dict[str, Any]:
+    meta = _meta(unit)
+    state = _pick(unit, meta, "state")
+    privacy = _pick(unit, meta, "privacy")
+    summary: dict[str, Any] = {
+        "id": unit.get("id"),
+        "name": unit.get("name"),
+        "title": _pick(unit, meta, "title") or "",
+        "state": state,
+        "state_label": STATE_LABEL.get(state) if isinstance(state, int) else None,
+        "privacy": privacy,
+        "privacy_label": PRIVACY_LABEL.get(privacy) if isinstance(privacy, int) else None,
+    }
+    min_tier = _pick(unit, meta, "min_tier")
+    if min_tier is not None:
+        summary["min_tier"] = min_tier
+    if children is not None:
+        summary["children"] = [summarize_lesson(*unwrap_unit(child)) for child in children]
+    return summary
+
+
+def summarize_lesson(unit: dict[str, Any], children: list[Any] | None = None) -> dict[str, Any]:
+    meta = _meta(unit)
+    item: dict[str, Any] = {
+        "id": unit.get("id"),
+        "name": unit.get("name"),
+        "title": _pick(unit, meta, "title") or "",
+        "unit_type": unit.get("unit_type") or meta.get("unit_type"),
+        "parent_id": unit.get("parent_id") or unit.get("parentId"),
+    }
+    desc = meta.get("desc") if "desc" in meta else unit.get("desc")
+    if desc is not None:
+        item["desc"] = desc
+    if children:
+        item["children"] = [summarize_lesson(*unwrap_unit(child)) for child in children]
+    return item
+
+
+def lesson_list_item(unit: dict[str, Any]) -> dict[str, Any]:
+    item = summarize_lesson(unit)
+    item.pop("desc", None)
+    item.pop("children", None)
+    return item
+
+
+def walk_units(node: Any) -> list[dict[str, Any]]:
+    unit, children = unwrap_unit(node)
+    out: list[dict[str, Any]] = []
+    if unit.get("id"):
+        out.append(unit)
+    for child in children:
+        out.extend(walk_units(child))
+    return out
+
+
+def looks_like_course_unit(unit: dict[str, Any]) -> bool:
+    ut = unit.get("unit_type")
+    if ut == "course":
+        return True
+    if ut in ("module", "set"):
+        return False
+    meta = _meta(unit)
+    parent = unit.get("parent_id") or unit.get("parentId")
+    if parent:
+        return False
+    return bool(unit.get("id") and (meta.get("title") or unit.get("title")) and "privacy" in meta)
+
+
+def collect_courses(obj: Any, found: list[dict[str, Any]], seen: set[str]) -> None:
+    if isinstance(obj, dict):
+        unit, _children = unwrap_unit(obj)
+        uid = str(unit.get("id") or "")
+        if uid and uid not in seen and looks_like_course_unit(unit):
+            seen.add(uid)
+            found.append(unit)
+        for value in obj.values():
+            collect_courses(value, found, seen)
+    elif isinstance(obj, list):
+        for item in obj:
+            collect_courses(item, found, seen)
+
+
+def parse_next_data(html: str) -> dict[str, Any]:
+    match = NEXT_DATA_RE.search(html)
+    if not match:
+        raise ToolError("Classroom page did not contain __NEXT_DATA__; session may be expired.")
+    try:
+        data = json.loads(match.group(1))
+    except json.JSONDecodeError as exc:
+        raise ToolError("Classroom page __NEXT_DATA__ was not valid JSON.") from exc
+    if not isinstance(data, dict):
+        raise ToolError("Classroom page __NEXT_DATA__ had an unexpected shape.")
+    return data
+
+
+def extract_group_id(obj: Any) -> str | None:
+    found: list[str] = []
+
+    def walk(node: Any) -> None:
+        if found:
+            return
+        if isinstance(node, dict):
+            for key in ("group_id", "groupId"):
+                value = node.get(key)
+                if isinstance(value, str) and HEX_RE.match(value):
+                    found.append(value)
+                    return
+            g = node.get("group") or node.get("currentGroup")
+            if isinstance(g, dict) and isinstance(g.get("id"), str) and HEX_RE.match(g["id"]):
+                found.append(g["id"])
+                return
+            for value in node.values():
+                walk(value)
+                if found:
+                    return
+        elif isinstance(node, list):
+            for item in node:
+                walk(item)
+                if found:
+                    return
+
+    walk(obj)
+    return found[0] if found else None
